@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amacheck - Amazonサクラ判定＆セール目玉チェッカー</title>
+  <style>
+    :root {
+      --primary: #ff9900;
+      --primary-dark: #e68a00;
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      margin: 0 0 8px 0;
+      color: #111827;
+    }
+    header p {
+      color: #4b5563;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    /* タブ切り替え */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #fff;
+      background: #9ca3af;
+      transition: background 0.2s;
+    }
+    .tab-btn.active {
+      background: #2563eb;
+    }
+
+    /* 検索入力エリア */
+    .search-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+    button.action-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.action-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    /* 設定エリア */
+    .config-box {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .config-box input {
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      width: 160px;
+    }
+
+    /* ローディング */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    /* 結果カード */
+    .result-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .product-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0 0 8px 0;
+    }
+    .product-meta {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+
+    /* バッジ */
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .badge-safe { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+
+    /* メトリクス */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .metric-box {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    /* ボタン */
+    .btn-amazon {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .btn-amazon:hover {
+      background: var(--primary-dark);
+    }
+
+    .suspicious-list {
+      padding-left: 20px;
+      margin: 8px 0 0 0;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    .suspicious-list li {
+      margin-bottom: 6px;
+    }
+
+    .similar-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Amacheck 🛡️</h1>
+    <p>Amazonサクラ危険度分析 ＆ セール見せかけ値下げチェッカー</p>
+  </header>
+
+  <!-- タブ切り替えボタン -->
+  <div class="tabs">
+    <button onclick="switchTab('search')" id="tabSearch" class="tab-btn active">🔍 個別商品チェック</button>
+    <button onclick="switchTab('sale')" id="tabSale" class="tab-btn">🔥 セール安全目玉商品特集</button>
+  </div>
+
+  <!-- 【タブ1】個別商品検索エリア -->
+  <div id="searchSection">
+    <div class="search-card">
+      <div class="input-group">
+        <input type="text" id="searchInput" placeholder="AmazonのURL、ASIN（例: B08N5WRWNW）を入力">
+        <button class="action-btn" onclick="analyzeProduct()">調査・解析</button>
+      </div>
+      <div class="config-box">
+        <span>⚙️ アソシエイトID設定:</span>
+        <input type="text" id="associateIdInput" value="yourtag-22" placeholder="例: yourtag-22">
+        <span style="font-size: 0.75rem;">（生成されるAmazonリンクに自動付与されます）</span>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">
+      <p>🔍 Keepa API & AIがデータを解析中...</p>
+      <p style="font-size: 0.85rem;">価格履歴および口コミの信用度をディープラーニングで評価しています</p>
+    </div>
+
+    <div id="resultArea" style="display: none;">
+      <div class="result-card">
+        <div class="product-header">
+          <div>
+            <h2 class="product-title" id="resTitle">-</h2>
+            <div class="product-meta">
+              ASIN: <span id="resAsin">-</span> | 現在価格: <strong style="font-size: 1.1rem; color: #b91c1c;" id="resPrice">-</strong>
+            </div>
+          </div>
+          <div id="resBadge" class="badge badge-safe">解析完了</div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-label">サクラ危険度スコア</div>
+            <div class="metric-value" id="resSakuraScore">-</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">公式表示評価</div>
+            <div class="metric-value" id="resOfficialRating">-</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">サクラ除外後の実質評価</div>
+            <div class="metric-value" style="color: #2563eb;" id="resRealRating">-</div>
+          </div>
+        </div>
+
+        <h3>💡 AIによる危険度分析・口コミ診断</h3>
+        <ul class="suspicious-list" id="resPoints"></ul>
+
+        <a id="resAmazonLink" href="#" target="_blank" class="btn-amazon">Amazonで詳細を見る（アフィリエイトリンク） ➔</a>
+      </div>
+
+      <div class="result-card">
+        <h3>🛡️ 安全性が確認されたおすすめの類似商品</h3>
+        <p style="font-size: 0.9rem; color: #6b7280; margin-top: -8px;">サクラ率が極めて低く、価格と性能のバランスが安定している代替品です。</p>
+        <div id="similarContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 【タブ2】セール特集エリア（初期非表示） -->
+  <div id="saleSection" style="display: none;">
+    <div class="result-card">
+      <h2 id="saleEventTitle" style="margin-top:0; font-size:1.3rem;">🔥 タイムセール祭り 特選安全おすすめ商品</h2>
+      <p style="font-size: 0.9rem; color: #4b5563;">見せかけの値下げやサクラレビューが疑われる商品を自動排除し、「本当に安くて安全な商品」だけを厳選しています。</p>
+      
+      <div id="saleItemsContainer" style="margin-top: 16px;">
+        <p style="text-align: center; color: #6b7280;">タブを開くとセール商品が自動スキャンされます。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // バックエンドAPIの向き先（ローカル実行時は http://127.0.0.1:8000、デプロイ後はRender等のURLに変更）
+  const API_BASE = 'http://127.0.0.1:8000';
+
+  // タブ切り替えロジック
+  function switchTab(mode) {
+    const searchSection = document.getElementById('searchSection');
+    const saleSection = document.getElementById('saleSection');
+    const btnSearch = document.getElementById('tabSearch');
+    const btnSale = document.getElementById('tabSale');
+
+    if (mode === 'search') {
+      searchSection.style.display = 'block';
+      saleSection.style.display = 'none';
+      btnSearch.classList.add('active');
+      btnSale.classList.remove('active');
+    } else {
+      searchSection.style.display = 'none';
+      saleSection.style.display = 'block';
+      btnSale.classList.add('active');
+      btnSearch.classList.remove('active');
+      
+      // セール特集データを自動ロード
+      loadSaleFeatured();
+    }
+  }
+
+  // 個別商品分析の実行
+  async function analyzeProduct() {
+    const input = document.getElementById('searchInput').value.trim();
+    const tag = document.getElementById('associateIdInput').value;
+    
+    if (!input) {
+      alert('URLまたはASINを入力してください。');
+      return;
+    }
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('resultArea').style.display = 'none';
+
+    try {
+      const response = await fetch(`${API_BASE}/api/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input_query: input, associate_id: tag })
+      });
+
+      if (!response.ok) throw new Error('サーバーエラーが発生しました');
+      const data = await response.json();
+
+      document.getElementById('resTitle').innerText = data.title;
+      document.getElementById('resAsin').innerText = data.asin;
+      document.getElementById('resPrice').innerText = data.price;
+      document.getElementById('resOfficialRating').innerText = data.official_rating;
+      document.getElementById('resRealRating').innerText = data.real_rating;
+      document.getElementById('resSakuraScore').innerText = data.sakura_score;
+
+      const badge = document.getElementById('resBadge');
+      if (data.risk_level === 'DANGER') {
+        badge.innerText = '⚠️ 危険度 高 (サクラ懸念)';
+        badge.className = 'badge badge-danger';
+      } else if (data.risk_level === 'WARNING') {
+        badge.innerText = '⚡ 注意 (レビュー偏りあり)';
+        badge.className = 'badge badge-warning';
+      } else {
+        badge.innerText = '✅ 安全 (Safe)';
+        badge.className = 'badge badge-safe';
+      }
+
+      const pointsList = document.getElementById('resPoints');
+      pointsList.innerHTML = data.suspicious_points.map(p => `<li>${p}</li>`).join('');
+
+      document.getElementById('resAmazonLink').href = data.affiliate_url;
+
+      const similarContainer = document.getElementById('similarContainer');
+      similarContainer.innerHTML = data.similar_items.map(item => `
+        <div class="similar-item">
+          <div>
+            <strong>${item.title}</strong><br>
+            <span style="font-size: 0.9rem; color: #4b5563;">価格: ${item.price} | 評価: ${item.rating}</span>
+          </div>
+          <div>
+            <a href="${item.url}" target="_blank" class="btn-amazon" style="margin: 0; padding: 8px 14px; font-size: 0.85rem;">商品を見る ➔</a>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('resultArea').style.display = 'block';
+
+    } catch (err) {
+      alert('データの取得に失敗しました。Pythonバックエンド(main.py)が起動しているか確認してください。');
+      document.getElementById('loading').style.display = 'none';
+    }
+  }
+
+  // セール特集データの取得・描画
+  async function loadSaleFeatured() {
+    const tag = document.getElementById('associateIdInput').value;
+    const container = document.getElementById('saleItemsContainer');
+    container.innerHTML = '<p style="text-align:center; color:#6b7280;">セール対象商品を解析・フィルタリング中...</p>';
+
+    try {
+      const response = await fetch(`${API_BASE}/api/sale-featured`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ associate_id: tag })
+      });
+      
+      const data = await response.json();
+      document.getElementById('saleEventTitle').innerText = data.event_name;
+
+      if (data.passed_items.length === 0) {
+        container.innerHTML = '<p>現在、基準を満たす安全な目玉商品はありません。</p>';
+        return;
+      }
+
+      container.innerHTML = data.passed_items.map(item => `
+        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: #f9fafb;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">${item.category}</span>
+              <h3 style="margin: 8px 0 4px 0; font-size: 1.1rem;">${item.title}</h3>
+              <div style="font-size: 0.9rem; color: #4b5563;">
+                セール価格: <strong style="color: #b91c1c; font-size: 1.2rem;">${item.sale_price}</strong> 
+                <span style="text-decoration: line-through; margin-left: 8px;">参考: ${item.normal_price}</span>
+                <span style="color: #166534; font-weight: bold; margin-left: 8px;">(${item.real_discount_rate})</span>
+              </div>
+              <p style="font-size: 0.85rem; color: #374151; margin: 8px 0 0 0;">💡 ${item.ai_comment}</p>
+            </div>
+            <div>
+              <a href="${item.affiliate_url}" target="_blank" class="btn-amazon" style="margin: 0; padding: 10px 16px; font-size: 0.85rem;">Amazonで見る ➔</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+    } catch (err) {
+      container.innerHTML = '<p style="color: #b91c1c; text-align: center;">セールデータの取得に失敗しました。バックエンドが起動しているか確認してください。</p>';
+    }
+  }
+</script>
+
+</body>
+</html>

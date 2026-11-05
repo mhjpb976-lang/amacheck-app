@@ -3,25 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amacheck - Amazon価格比較 & サクラチェッカー</title>
+    <title>Amacheck - Amazon価格比較 & セール情報</title>
     <style>
         body { font-family: sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { font-size: 24px; color: #111; margin-bottom: 10px; }
+        .container { max-width: 700px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; color: #111; margin-bottom: 5px; }
         p { color: #666; margin-bottom: 20px; }
         input[type="text"] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 15px; }
         button { background: #ff9900; color: #fff; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         button:hover { background: #e88b00; }
-        #result { margin-top: 25px; padding: 15px; background: #f9f9f9; border-left: 4px solid #ff9900; display: none; }
+        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #ff9900; display: none; }
+        
+        /* セール情報セクションのスタイル */
+        .sales-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        .sales-section h2 { font-size: 20px; color: #222; margin-bottom: 15px; }
+        .sale-card { background: #fff8f0; border: 1px solid #ffd8a8; border-radius: 6px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .sale-info h4 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
+        .badge { background: #ff3b30; color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 8px; }
+        .price-box { text-align: right; }
+        .current-price { font-size: 18px; font-weight: bold; color: #b12704; }
+        .original-price { font-size: 13px; color: #888; text-decoration: line-through; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Amacheck</h1>
-        <p>AmazonのURLを入力して、サクラレビューや価格のお得度を瞬時にチェック！</p>
+        <p>AmazonのURLを入力して、サクラ度や価格の妥当性をチェック！</p>
         <input type="text" id="productUrl" placeholder="https://www.amazon.co.jp/dp/..." />
-        <button onclick="analyzeProduct()">分析する</button>
+        <button onclick="analyzeProduct()">価格・サクラ度を分析する</button>
         <div id="result"></div>
+
+        <div class="sales-section">
+            <h2>🔥 本日の注目セール対象商品</h2>
+            <div id="salesList">読み込み中...</div>
+        </div>
     </div>
 
     <script>
@@ -52,6 +67,36 @@
                 resultDiv.innerHTML = 'エラーが発生しました。もう一度お試しください。';
             }
         }
+
+        // ページ読み込み時にセール商品を自動取得して表示
+        async function loadSales() {
+            try {
+                const response = await fetch('/api/sales');
+                const sales = await response.json();
+                const listDiv = document.getElementById('salesList');
+                
+                let html = '';
+                sales.forEach(item => {
+                    html += `
+                        <div class="sale-card">
+                            <div class="sale-info">
+                                <div><span class="badge">${item.badge}</span><span style="color:#007185; font-weight:bold;">${item.discount}</span></div>
+                                <h4 style="margin-top:8px;">${item.title}</h4>
+                            </div>
+                            <div class="price-box">
+                                <div class="current-price">${item.price}</div>
+                                <div class="original-price">${item.original}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                listDiv.innerHTML = html;
+            } catch (err) {
+                document.getElementById('salesList').innerHTML = 'セール情報の読み込みに失敗しました。';
+            }
+        }
+
+        loadSales();
     </script>
 </body>
 </html>

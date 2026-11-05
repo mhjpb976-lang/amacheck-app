@@ -19,7 +19,6 @@ def generate_affiliate_url(raw_url: str) -> str:
         asin = match.group(1)
         return f"https://www.amazon.co.jp/dp/{asin}?tag={TRACKING_ID}"
     
-    # マッチしない場合はそのままパラメータを付与
     if "?" in raw_url:
         return f"{raw_url}&tag={TRACKING_ID}"
     else:
@@ -38,7 +37,6 @@ def analyze_product(data: AnalyzeRequest):
     if not product_url:
         raise HTTPException(status_code=400, detail="URL is required.")
     
-    # アフィリエイトURLを生成
     affiliate_url = generate_affiliate_url(product_url)
     
     return {
@@ -53,27 +51,35 @@ def analyze_product(data: AnalyzeRequest):
 def get_sale_items():
     return [
         {
-            "title": "Anker PowerCore 10000 モバイルバッテリー",
-            "discount": "25% OFF",
-            "price": "¥3,500",
-            "original": "¥4,699",
+            "title": "Anker Nano II 65W (PD 充電器 急速充電器)",
+            "discount": "20% OFF",
+            "price": "¥3,990",
+            "original": "¥4,990",
             "badge": "タイムセール",
-            "url": f"https://www.amazon.co.jp/dp/B019X8A1LE?tag={TRACKING_ID}"
+            "url": f"https://www.amazon.co.jp/dp/B08T5QN2VJ?tag={TRACKING_ID}"
         },
         {
             "title": "Fire TV Stick 4K - 映画館のような高画質",
-            "discount": "30% OFF",
-            "price": "¥4,980",
-            "original": "¥6,980",
+            "discount": "25% OFF",
+            "price": "¥5,480",
+            "original": "¥7,480",
             "badge": "特選タイムセール",
-            "url": f"https://www.amazon.co.jp/dp/B09JW9B4SG?tag={TRACKING_ID}"
+            "url": f"https://www.amazon.co.jp/dp/B0BP91V3DS?tag={TRACKING_ID}"
         },
         {
-            "title": "Kindle Paperwhite (16GB) 広告なし",
-            "discount": "20% OFF",
-            "price": "¥15,980",
+            "title": "Kindle Paperwhite (16GB) 6.8インチディスプレイ",
+            "discount": "15% OFF",
+            "price": "¥16,980",
             "original": "¥19,980",
             "badge": "期間限定セール",
             "url": f"https://www.amazon.co.jp/dp/B09T3X59VM?tag={TRACKING_ID}"
         }
     ]
+
+@app.get("/api/sale-page")
+def get_sale_page():
+    return {
+        "title": "Amazon タイムセール会場",
+        "subtitle": "毎日更新されるタイムセールや特選タイムセールをチェック！",
+        "url": f"https://www.amazon.co.jp/gp/goldbox?tag={TRACKING_ID}"
+    }

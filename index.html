@@ -14,7 +14,13 @@
         button:hover { background: #e88b00; }
         #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #ff9900; display: none; }
         
-        .sales-section { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        .sale-banner { background: linear-gradient(135deg, #232f3e, #37475a); color: #fff; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center; }
+        .sale-banner h3 { margin: 0 0 8px 0; color: #ff9900; font-size: 18px; }
+        .sale-banner p { color: #ddd; font-size: 14px; margin-bottom: 15px; }
+        .banner-btn { display: inline-block; background: #ff9900; color: #fff; padding: 10px 24px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 15px; }
+        .banner-btn:hover { background: #e88b00; }
+
+        .sales-section { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
         .sales-section h2 { font-size: 20px; color: #222; margin-bottom: 15px; }
         .sale-card { background: #fff8f0; border: 1px solid #ffd8a8; border-radius: 6px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .sale-info h4 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
@@ -22,7 +28,7 @@
         .price-box { text-align: right; }
         .current-price { font-size: 18px; font-weight: bold; color: #b12704; }
         .original-price { font-size: 13px; color: #888; text-decoration: line-through; }
-        .affiliate-btn { display: inline-block; margin-top: 10px; padding: 8px 16px; background: #ffd814; border: 1px solid #fcd200; border-radius: 4px; color: #111; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .affiliate-btn { display: inline-block; margin-top: 10px; padding: 6px 14px; background: #ffd814; border: 1px solid #fcd200; border-radius: 4px; color: #111; text-decoration: none; font-size: 13px; font-weight: bold; }
         .affiliate-btn:hover { background: #f7ca00; }
     </style>
 </head>
@@ -34,8 +40,10 @@
         <button onclick="analyzeProduct()">価格・サクラ度を分析する</button>
         <div id="result"></div>
 
+        <div id="saleBannerArea"></div>
+
         <div class="sales-section">
-            <h2>🔥 本日の注目セール対象商品</h2>
+            <h2>🔥 編集部おすすめのセール商品</h2>
             <div id="salesList">読み込み中...</div>
         </div>
     </div>
@@ -72,12 +80,26 @@
             }
         }
 
+        async function loadSaleBanner() {
+            try {
+                const response = await fetch('/api/sale-page');
+                const page = await response.json();
+                document.getElementById('saleBannerArea').innerHTML = `
+                    <div class="sale-banner">
+                        <h3>⚡ ${page.title}</h3>
+                        <p>${page.subtitle}</p>
+                        <a href="${page.url}" target="_blank" rel="noopener noreferrer" class="banner-btn">タイムセール会場へ移動する (PR)</a>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load sale banner');
+            }
+        }
+
         async function loadSales() {
             try {
                 const response = await fetch('/api/sales');
                 const sales = await response.json();
-                const listDiv = document.getElementById('salesList');
-                
                 let html = '';
                 sales.forEach(item => {
                     html += `
@@ -85,7 +107,7 @@
                             <div class="sale-info">
                                 <div><span class="badge">${item.badge}</span><span style="color:#007185; font-weight:bold;">${item.discount}</span></div>
                                 <h4 style="margin-top:8px;">${item.title}</h4>
-                                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="affiliate-btn" style="font-size:12px; padding:4px 10px;">Amazonでチェック (PR)</a>
+                                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="affiliate-btn">Amazonでチェック (PR)</a>
                             </div>
                             <div class="price-box">
                                 <div class="current-price">${item.price}</div>
@@ -94,12 +116,13 @@
                         </div>
                     `;
                 });
-                listDiv.innerHTML = html;
+                document.getElementById('salesList').innerHTML = html;
             } catch (err) {
                 document.getElementById('salesList').innerHTML = 'セール情報の読み込みに失敗しました。';
             }
         }
 
+        loadSaleBanner();
         loadSales();
     </script>
 </body>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amacheck - Amazon価格比較 & サクラチェッカー</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; color: #111; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 15px; }
+        button { background: #ff9900; color: #fff; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background: #e88b00; }
+        #result { margin-top: 25px; padding: 15px; background: #f9f9f9; border-left: 4px solid #ff9900; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Amacheck</h1>
+        <p>AmazonのURLを入力して、サクラレビューや価格のお得度を瞬時にチェック！</p>
+        <input type="text" id="productUrl" placeholder="https://www.amazon.co.jp/dp/..." />
+        <button onclick="analyzeProduct()">分析する</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function analyzeProduct() {
+            const url = document.getElementById('productUrl').value;
+            const resultDiv = document.getElementById('result');
+            if (!url) {
+                alert('AmazonのURLを入力してください。');
+                return;
+            }
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '分析中...';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>分析結果</h3>
+                    <p><strong>サクラ度:</strong> ${data.sakura_score}</p>
+                    <p><strong>価格動向:</strong> ${data.price_trend}</p>
+                    <p><strong>判定:</strong> ${data.recommendation}</p>
+                `;
+            } catch (err) {
+                resultDiv.innerHTML = 'エラーが発生しました。もう一度お試しください。';
+            }
+        }
+    </script>
+</body>
+</html>
